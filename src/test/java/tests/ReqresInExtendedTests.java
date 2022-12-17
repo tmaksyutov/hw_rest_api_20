@@ -5,12 +5,16 @@ import models.lombok.LoginBodyLombokModel;
 import models.lombok.LoginResponseLombokModel;
 import models.pojo.LoginBodyPojoModel;
 import models.pojo.LoginResponsePojoModel;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static helpers.CustomApiListener.withCustomTemplates;
 import static io.restassured.RestAssured.given;
 import static io.restassured.http.ContentType.JSON;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.hasItem;
+import static specs.ListUsersSpec.listUsersRequestSpec;
+import static specs.ListUsersSpec.listUsersResponseSpec;
 import static specs.LoginSpecs.loginRequestSpec;
 import static specs.LoginSpecs.loginResponseSpec;
 
@@ -114,6 +118,25 @@ public class ReqresInExtendedTests {
                 .extract().as(LoginResponseLombokModel.class);
 
         assertThat(response.getToken()).isEqualTo("QpwL5tke4Pnpja7X4");
+    }
+
+    @Test
+    @DisplayName("Проверка списка пользователей на странице №2")
+    void listUsersWithGroovyTest() {
+        given()
+                .spec(listUsersRequestSpec)
+                .when()
+                .get("/users?page=2")
+                .then()
+                .spec(listUsersResponseSpec)
+                .body("data.findAll{it.email =~/.*?@reqres.in/}.email.flatten()",
+                        hasItem("rachel.howell@reqres.in"))
+                .body("data.first_name.flatten()",
+                        hasItem("Byron"))
+                .body("data.last_name.flatten()",
+                        hasItem("Funke"))
+                .body("data.findAll{it.avatar =~/.*?.jpg/}.avatar.flatten()",
+                        hasItem("https://reqres.in/img/faces/7-image.jpg"));
     }
 
 }
